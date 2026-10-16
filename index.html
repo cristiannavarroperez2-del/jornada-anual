@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora de jornada anual</title>
+<meta name="description" content="Calcula las horas de trabajo anuales con tu calendario laboral, festivos de España, vacaciones y registro de horas.">
+<meta name="theme-color" content="#1F3A68">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="iconos/icono-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Jornada">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&amp;family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;display=swap">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<a class="saltar" href="#principal">Saltar al contenido</a>
+
+<header class="cabecera">
+  <div class="cabecera__fila envoltura">
+    <div class="marca">
+      <svg class="marca__icono" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="26" height="24" rx="4" fill="var(--acento)"/><rect x="3" y="5" width="26" height="7" rx="3" fill="var(--acento-2)"/><g fill="var(--sobre-acento)"><rect x="7" y="15" width="4" height="4" rx="1"/><rect x="14" y="15" width="4" height="4" rx="1"/><rect x="21" y="15" width="4" height="4" rx="1" opacity=".55"/><rect x="7" y="21" width="4" height="4" rx="1"/><rect x="14" y="21" width="4" height="4" rx="1" opacity=".55"/></g></svg>
+      <div>
+        <h1 class="marca__titulo">Jornada anual</h1>
+        <p class="marca__sub" id="marca-sub">Sin ubicación configurada</p>
+      </div>
+    </div>
+    <div class="anio" role="group" aria-label="Año que se calcula">
+      <button type="button" class="btn-icono" id="anio-anterior" aria-label="Año anterior">‹</button>
+      <select id="anio-sel" aria-label="Año que se calcula"></select>
+      <button type="button" class="btn-icono" id="anio-siguiente" aria-label="Año siguiente">›</button>
+    </div>
+    <div class="cabecera__acciones">
+      <button type="button" class="btn btn--suave" id="btn-deshacer" disabled title="Deshacer (Ctrl+Z)">Deshacer</button>
+      <button type="button" class="btn btn--suave" id="btn-rehacer" disabled title="Rehacer (Ctrl+Y)">Rehacer</button>
+      <button type="button" class="btn-icono" id="btn-tema" aria-label="Cambiar entre modo claro y oscuro" title="Modo claro u oscuro">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="envoltura">
+    <div class="cifras" id="cifras" aria-live="polite"></div>
+  </div>
+</header>
+<nav class="pestanas" aria-label="Secciones">
+  <div class="pestanas__lista envoltura" role="tablist">
+    <button type="button" role="tab" class="pestana" id="tab-calendario" aria-controls="pan-calendario" aria-selected="true">Calendario</button>
+    <button type="button" role="tab" class="pestana" id="tab-resultados" aria-controls="pan-resultados" aria-selected="false" tabindex="-1">Resultados</button>
+    <button type="button" role="tab" class="pestana" id="tab-registro" aria-controls="pan-registro" aria-selected="false" tabindex="-1">Registro de horas</button>
+    <button type="button" role="tab" class="pestana" id="tab-festivos" aria-controls="pan-festivos" aria-selected="false" tabindex="-1">Festivos</button>
+    <button type="button" role="tab" class="pestana" id="tab-equipo" aria-controls="pan-equipo" aria-selected="false" tabindex="-1">Vacaciones del equipo</button>
+    <button type="button" role="tab" class="pestana" id="tab-config" aria-controls="pan-config" aria-selected="false" tabindex="-1">Configuración</button>
+    <button type="button" role="tab" class="pestana" id="tab-datos" aria-controls="pan-datos" aria-selected="false" tabindex="-1">Datos e informes</button>
+  </div>
+</nav>
+
+<main id="principal" class="envoltura">
+
+  <!-- CALENDARIO -->
+  <section id="pan-calendario" role="tabpanel" aria-labelledby="tab-calendario" class="panel">
+    <div id="avisos-calendario" class="avisos"></div>
+    <div class="cal-layout">
+      <div class="cal-principal">
+        <div class="herramientas">
+          <button type="button" class="btn" id="btn-modo-rango" aria-pressed="false">Seleccionar rango en el calendario</button>
+          <button type="button" class="btn" id="btn-periodo">Marcar periodo por fechas</button>
+          <button type="button" class="btn btn--peligro-suave" id="btn-restablecer-anio">Restablecer calendario</button>
+        </div>
+        <p class="ayuda-rango" id="ayuda-rango" aria-live="polite" hidden></p>
+        <ul class="leyenda" id="leyenda" aria-label="Leyenda de colores"></ul>
+        <div class="meses" id="meses"></div>
+      </div>
+      <aside class="cal-resumen" aria-label="Resumen del año">
+        <div class="tarjetas" id="tarjetas"></div>
+        <div class="bloque" id="progreso"></div>
+        <div class="bloque">
+          <h2 class="bloque__titulo">Previstas, registradas y pendientes</h2>
+          <div id="grafico-comparacion"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section id="pan-resultados" role="tabpanel" aria-labelledby="tab-resultados" class="panel" hidden>
+    <div class="tres-columnas" id="bloques-resultado"></div>
+    <div class="bloque">
+      <h2 class="bloque__titulo">Desglose del cálculo</h2>
+      <div class="tabla-desplazable"><table class="tabla" id="tabla-desglose"></table></div>
+      <p class="cuadre" id="cuadre"></p>
+    </div>
+    <div class="bloque">
+      <div class="bloque__cab">
+        <h2 class="bloque__titulo">Horas por mes</h2>
+        <ul class="leyenda-grafico" aria-label="Leyenda del gráfico">
+          <li><span class="muestra muestra--s1"></span>Previstas por calendario</li>
+          <li><span class="muestra muestra--s2"></span>Registradas</li>
+        </ul>
+      </div>
+      <div id="grafico-meses" class="grafico-meses"></div>
+      <div class="tabla-desplazable"><table class="tabla" id="tabla-meses"></table></div>
+    </div>
+  </section>
+
+  <!-- REGISTRO -->
+  <section id="pan-registro" role="tabpanel" aria-labelledby="tab-registro" class="panel" hidden>
+    <div class="dos-columnas">
+      <form class="bloque formulario" id="form-registro" novalidate>
+        <h2 class="bloque__titulo" id="reg-titulo">Nuevo registro</h2>
+        <input type="hidden" id="reg-id">
+        <div class="rejilla-campos">
+          <label class="campo">Fecha<input type="date" id="reg-fecha" required></label>
+          <label class="campo">Hora de entrada<input type="time" id="reg-entrada"></label>
+          <label class="campo">Hora de salida<input type="time" id="reg-salida"></label>
+          <label class="campo">Pausa no trabajada (min)<input type="number" id="reg-pausa" min="0" max="1440" step="5" inputmode="numeric"></label>
+          <label class="campo">Horas efectivas<input type="text" id="reg-efectivas" inputmode="decimal" placeholder="Se calculan solas"></label>
+          <label class="campo">Horas extraordinarias<input type="text" id="reg-extra" inputmode="decimal" placeholder="Se calculan solas"></label>
+        </div>
+        <label class="campo">Comentario (opcional)<input type="text" id="reg-comentario" maxlength="500"></label>
+        <p class="vista-previa" id="reg-vista" aria-live="polite"></p>
+        <p class="error" id="reg-error" role="alert" hidden></p>
+        <div class="acciones">
+          <button type="submit" class="btn btn--primario" id="reg-guardar">Guardar registro</button>
+          <button type="button" class="btn" id="reg-habitual">Usar mi horario habitual</button>
+          <button type="button" class="btn" id="reg-cancelar" hidden>Cancelar edición</button>
+        </div>
+        <p class="nota">Las horas efectivas se calculan con la salida menos la entrada y la pausa. Escribe un valor solo si quieres corregirlas. Las extraordinarias son lo que supera la jornada prevista del día.</p>
+      </form>
+      <div class="bloque">
+        <div class="bloque__cab">
+          <h2 class="bloque__titulo">Registros</h2>
+          <label class="campo campo--linea">Mes
+            <select id="reg-mes"></select>
+          </label>
+        </div>
+        <div class="tabla-desplazable"><table class="tabla" id="tabla-registros"></table></div>
+      </div>
+    </div>
+    <div class="bloque">
+      <h2 class="bloque__titulo">Totales por mes</h2>
+      <div class="tabla-desplazable"><table class="tabla" id="tabla-reg-meses"></table></div>
+    </div>
+  </section>
+
+  <!-- FESTIVOS -->
+  <section id="pan-festivos" role="tabpanel" aria-labelledby="tab-festivos" class="panel" hidden>
+    <div id="fest-estado" class="avisos"></div>
+    <div class="dos-columnas dos-columnas--ancha">
+      <div class="bloque">
+        <div class="bloque__cab">
+          <h2 class="bloque__titulo" id="fest-titulo">Festivos</h2>
+          <div class="acciones">
+            <button type="button" class="btn" id="fest-exportar">Exportar CSV</button>
+            <button type="button" class="btn" id="fest-restaurar">Restaurar oficiales</button>
+          </div>
+        </div>
+        <div class="tabla-desplazable"><table class="tabla" id="tabla-festivos"></table></div>
+        <div id="fest-ocultos"></div>
+      </div>
+      <div class="pila">
+        <form class="bloque formulario" id="form-festivo" novalidate>
+          <h2 class="bloque__titulo" id="fest-form-titulo">Añadir festivo</h2>
+          <input type="hidden" id="fest-id">
+          <div class="rejilla-campos">
+            <label class="campo">Fecha<input type="date" id="fest-fecha" required></label>
+            <label class="campo">Tipo
+              <select id="fest-tipo">
+                <option value="L">Local</option>
+                <option value="A">Autonómico</option>
+                <option value="N">Nacional</option>
+              </select>
+            </label>
+          </div>
+          <label class="campo">Nombre<input type="text" id="fest-nombre" maxlength="120" required placeholder="Por ejemplo, San Isidro"></label>
+          <label class="campo">Trasladado desde (opcional)<input type="date" id="fest-traslado"></label>
+          <p class="error" id="fest-error" role="alert" hidden></p>
+          <div class="acciones">
+            <button type="submit" class="btn btn--primario" id="fest-guardar">Añadir festivo</button>
+            <button type="button" class="btn" id="fest-cancelar" hidden>Cancelar edición</button>
+          </div>
+        </form>
+        <form class="bloque formulario" id="form-importar-fest" novalidate>
+          <h2 class="bloque__titulo">Importar festivos</h2>
+          <p class="nota">Pega una lista o elige un archivo CSV, JSON o calendario ICS. En CSV, una línea por festivo: <code>fecha;nombre;tipo</code>, por ejemplo <code>15/05/2026;San Isidro;local</code>.</p>
+          <label class="campo">Archivo<input type="file" id="fest-archivo" accept=".csv,.txt,.json,.ics,text/csv,application/json,text/calendar"></label>
+          <label class="campo">O pega el contenido<textarea id="fest-texto" rows="4" spellcheck="false"></textarea></label>
+          <p class="vista-previa" id="fest-import-resultado" aria-live="polite"></p>
+          <div class="acciones"><button type="submit" class="btn btn--primario">Importar</button></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- VACACIONES DEL EQUIPO -->
+  <section id="pan-equipo" role="tabpanel" aria-labelledby="tab-equipo" class="panel" hidden>
+    <div class="aviso aviso--info"><p>Recuento de los días de vacaciones de cada trabajador a partir de la exportación de vuestro programa de personal (por ejemplo, Quiter). El archivo se lee en este navegador y los datos se guardan solo aquí.</p></div>
+    <div class="dos-columnas">
+      <form class="bloque formulario" id="form-eq-importar" novalidate>
+        <h2 class="bloque__titulo">1. Importar la exportación</h2>
+        <label class="campo">Archivo (.xlsx, .xls guardado como página web o XML, .csv)<input type="file" id="eq-archivo" accept=".xlsx,.xls,.xml,.csv,.txt,.htm,.html"></label>
+        <label class="campo">O abre el Excel, selecciona todo (Ctrl+A), copia (Ctrl+C) y pega aquí<textarea id="eq-texto" rows="4" spellcheck="false" placeholder="Pega aquí las celdas copiadas de Excel"></textarea></label>
+        <p class="error" id="eq-error" role="alert" hidden></p>
+        <p class="vista-previa" id="eq-origen" aria-live="polite"></p>
+        <div class="acciones">
+          <button type="submit" class="btn btn--primario" id="eq-leer">Leer datos</button>
+          <button type="button" class="btn btn--peligro-suave" id="eq-borrar">Borrar datos del equipo</button>
+        </div>
+      </form>
+      <form class="bloque formulario" id="form-eq-ajustes" novalidate>
+        <h2 class="bloque__titulo">2. Cómo se cuentan los días</h2>
+        <div class="segmentado" role="radiogroup" aria-label="Forma de contar los días">
+          <label><input type="radio" name="eq-modo" id="eq-modo-fecha" value="fecha"> Día a día según la fecha</label>
+          <label><input type="radio" name="eq-modo" id="eq-modo-horas" value="horas"> Horas totales ÷ horas por día</label>
+        </div>
+        <div class="rejilla-campos">
+          <label class="campo">Horas de un día de vacaciones<input type="text" id="eq-horas-dia" inputmode="decimal"></label>
+          <label class="campo">Días de vacaciones por trabajador<input type="number" id="eq-derecho" min="0" max="366" inputmode="numeric"></label>
+          <label class="campo">Año<select id="eq-anio"></select></label>
+        </div>
+        <div class="tabla-desplazable">
+          <table class="tabla tabla--compacta">
+            <caption class="nota">Horas de jornada de la empresa por día de la semana</caption>
+            <thead><tr id="eq-jornada-cab"></tr></thead>
+            <tbody><tr id="eq-jornada"></tr></tbody>
+          </table>
+        </div>
+        <p class="nota" id="eq-explicacion"></p>
+      </form>
+    </div>
+    <div class="bloque" id="eq-columnas" hidden>
+      <h2 class="bloque__titulo">3. Columnas del archivo</h2>
+      <p class="nota">Se han propuesto automáticamente. Cámbialas si alguna no corresponde.</p>
+      <div class="rejilla-campos" id="eq-selects"></div>
+      <label class="check" id="eq-heredar-campo"><input type="checkbox" id="eq-heredar"> El nombre solo aparece en la primera fila de cada trabajador (usar el de la fila anterior cuando está vacío)</label>
+      <div id="eq-tipos"></div>
+      <h3 class="bloque__subtitulo">Primeras filas del archivo</h3>
+      <div class="tabla-desplazable"><table class="tabla tabla--muestra" id="eq-muestra"></table></div>
+    </div>
+    <div class="bloque">
+      <div class="bloque__cab">
+        <h2 class="bloque__titulo" id="eq-titulo">4. Recuento por trabajador</h2>
+        <div class="acciones">
+          <label class="campo campo--linea"><span class="visually-hidden">Buscar trabajador</span><input type="search" id="eq-buscar" placeholder="Buscar trabajador"></label>
+          <button type="button" class="btn" id="eq-exportar">Exportar CSV</button>
+        </div>
+      </div>
+      <div id="eq-avisos" class="avisos"></div>
+      <div class="tabla-desplazable"><table class="tabla" id="eq-tabla"></table></div>
+    </div>
+  </section>
+
+  <!-- CONFIGURACIÓN -->
+  <section id="pan-config" role="tabpanel" aria-labelledby="tab-config" class="panel" hidden>
+    <form id="form-config" class="config" novalidate>
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Ubicación y año</legend>
+        <div class="rejilla-campos">
+          <label class="campo">País<select id="cfg-pais" disabled><option value="ES">España</option></select></label>
+          <label class="campo">Comunidad autónoma<select id="cfg-ccaa"></select></label>
+          <label class="campo">Provincia<select id="cfg-provincia"></select></label>
+          <label class="campo">Municipio<input type="text" id="cfg-municipio" autocomplete="address-level2" placeholder="Escribe tu municipio"></label>
+          <label class="campo" id="cfg-isla-campo" hidden>Isla<select id="cfg-isla"></select></label>
+          <label class="campo">Año que quieres calcular<select id="cfg-anio"></select></label>
+        </div>
+        <p class="nota">Los festivos nacionales y autonómicos se cargan según la comunidad. Los locales dependen del municipio: si no aparecen verificados, añádelos en la pestaña Festivos.</p>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Jornada</legend>
+        <div class="segmentado" role="radiogroup" aria-label="Cómo indicas tu jornada">
+          <label><input type="radio" name="cfg-modo" id="cfg-modo-diaria" value="diaria"> Horas de cada día</label>
+          <label><input type="radio" name="cfg-modo" id="cfg-modo-semanal" value="semanal"> Horas semanales</label>
+        </div>
+        <div id="cfg-semanal" class="rejilla-campos" hidden>
+          <label class="campo">Horas a la semana<input type="text" id="cfg-horas-semanales" inputmode="decimal"></label>
+        </div>
+        <div class="tabla-desplazable">
+          <table class="tabla tabla--jornada">
+            <thead><tr><th scope="col">Día</th><th scope="col">Trabajo este día</th><th scope="col">Horas</th></tr></thead>
+            <tbody id="cfg-jornada"></tbody>
+          </table>
+        </div>
+        <p class="total-semana" id="cfg-total-semana"></p>
+        <div class="rejilla-campos">
+          <label class="campo">Horas de un día trabajado excepcionalmente<input type="text" id="cfg-horas-exc" inputmode="decimal"></label>
+          <label class="campo">Entrada habitual<input type="time" id="cfg-entrada"></label>
+          <label class="campo">Salida habitual<input type="time" id="cfg-salida"></label>
+          <label class="campo">Pausa habitual (min)<input type="number" id="cfg-pausa" min="0" max="1440" step="5" inputmode="numeric"></label>
+        </div>
+        <p class="nota">Admite decimales con coma o con formato hora: 7,5 o 7:30. El horario habitual solo sirve para rellenar el registro de horas.</p>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Vacaciones</legend>
+        <div class="rejilla-campos">
+          <label class="campo">Días de vacaciones al año<input type="number" id="cfg-vac-dias" min="0" max="366" inputmode="numeric"></label>
+        </div>
+        <div class="segmentado" role="radiogroup" aria-label="Cómo se cuentan las vacaciones">
+          <label><input type="radio" name="cfg-vac-tipo" id="cfg-vac-laborables" value="laborables"> Días laborables</label>
+          <label><input type="radio" name="cfg-vac-tipo" id="cfg-vac-naturales" value="naturales"> Días naturales</label>
+        </div>
+        <p class="nota">En días laborables solo cuentan los días de tu jornada que no son festivo. En días naturales cuentan todos los días marcados como vacaciones, incluidos fines de semana.</p>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Convenio colectivo</legend>
+        <div class="rejilla-campos">
+          <label class="campo">Horas anuales del convenio (opcional)<input type="text" id="cfg-convenio" inputmode="decimal" placeholder="Por ejemplo, 1780"></label>
+        </div>
+        <div class="segmentado" role="radiogroup" aria-label="Objetivo para el progreso">
+          <label><input type="radio" name="cfg-objetivo" id="cfg-obj-calendario" value="calendario"> Progreso sobre el calendario</label>
+          <label><input type="radio" name="cfg-objetivo" id="cfg-obj-convenio" value="convenio"> Progreso sobre el convenio</label>
+        </div>
+        <p class="nota">Cada convenio define a su manera la jornada anual (qué cuenta como tiempo de trabajo, cómo se tratan los festivos o las reducciones). Por eso la cifra del convenio se muestra aparte y no sustituye al cálculo del calendario.</p>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Festivos en fin de semana</legend>
+        <label class="check"><input type="checkbox" id="cfg-traslados"> Aplicar los traslados oficiales publicados (por ejemplo, un festivo en domingo que la comunidad pasa al lunes)</label>
+        <p class="nota">La aplicación nunca traslada festivos por su cuenta: solo usa los traslados que figuran en el calendario oficial. Si lo desactivas, el festivo vuelve a su fecha original.</p>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Apariencia</legend>
+        <div class="rejilla-campos">
+          <label class="campo">Tema
+            <select id="cfg-tema">
+              <option value="auto">Según el sistema</option>
+              <option value="claro">Claro</option>
+              <option value="oscuro">Oscuro</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+    </form>
+  </section>
+
+  <!-- DATOS E INFORMES -->
+  <section id="pan-datos" role="tabpanel" aria-labelledby="tab-datos" class="panel" hidden>
+    <div class="dos-columnas">
+      <div class="bloque">
+        <h2 class="bloque__titulo">Copia de seguridad</h2>
+        <p class="nota" id="info-almacenamiento"></p>
+        <div class="acciones"><button type="button" class="btn btn--primario" id="btn-exportar-json">Exportar copia (JSON)</button></div>
+        <form id="form-importar-json" class="formulario" novalidate>
+          <label class="campo">Importar copia desde archivo<input type="file" id="json-archivo" accept=".json,application/json"></label>
+          <label class="campo">O pega el contenido de la copia<textarea id="json-texto" rows="3" spellcheck="false"></textarea></label>
+          <p class="error" id="json-error" role="alert" hidden></p>
+          <div class="acciones"><button type="submit" class="btn">Importar copia</button></div>
+        </form>
+      </div>
+      <div class="bloque">
+        <h2 class="bloque__titulo">Informes y exportaciones</h2>
+        <div class="acciones acciones--columna">
+          <button type="button" class="btn" id="btn-informe-anual">Ver informe anual</button>
+          <button type="button" class="btn" id="btn-csv-anual">Exportar resumen anual (CSV)</button>
+          <button type="button" class="btn" id="btn-csv-registros">Exportar registros de horas (CSV)</button>
+        </div>
+        <div class="rejilla-campos">
+          <label class="campo">Mes para el informe mensual<select id="mes-informe"></select></label>
+        </div>
+        <div class="acciones">
+          <button type="button" class="btn" id="btn-informe-mensual">Ver informe mensual</button>
+          <button type="button" class="btn" id="btn-csv-mensual">Exportar mes (CSV)</button>
+        </div>
+        <p class="nota" id="nota-impresion"></p>
+      </div>
+    </div>
+    <div class="bloque bloque--peligro">
+      <h2 class="bloque__titulo">Borrar datos</h2>
+      <p class="nota">Elimina la configuración, los cambios del calendario, los festivos añadidos y los registros de este navegador. Exporta antes una copia si quieres conservarlos.</p>
+      <div class="acciones"><button type="button" class="btn btn--peligro" id="btn-borrar-todo">Borrar todos los datos</button></div>
+    </div>
+  </section>
+</main>
+
+<footer class="pie envoltura">
+  <p id="pie-fuente"></p>
+  <p>Los datos se guardan solo en este navegador. Exporta copias de seguridad con regularidad.</p>
+</footer>
+
+<!-- Diálogo de día -->
+<dialog id="dlg-dia" class="dlg" aria-labelledby="dia-titulo">
+  <div class="dlg__marco">
+    <header class="dlg__cab">
+      <h2 id="dia-titulo">Día</h2>
+      <button type="button" class="btn-icono" data-cerrar aria-label="Cerrar">×</button>
+    </header>
+    <div class="dlg__cuerpo">
+      <p class="dia-info" id="dia-info"></p>
+      <fieldset class="categorias">
+        <legend>Categoría del día</legend>
+        <div id="dia-cats" class="categorias__lista"></div>
+      </fieldset>
+      <div class="rejilla-campos">
+        <label class="campo" id="dia-horas-campo">Horas de trabajo previstas<input type="text" id="dia-horas" inputmode="decimal"></label>
+        <label class="campo" id="dia-ausencia-campo" hidden><span id="dia-ausencia-etq">Horas de vacaciones</span><input type="text" id="dia-ausencia" inputmode="decimal"></label>
+      </div>
+      <p class="nota" id="dia-horas-ayuda"></p>
+      <label class="campo">Nota<textarea id="dia-nota" rows="2" maxlength="500"></textarea></label>
+      <div id="dia-registros" class="dia-registros"></div>
+    </div>
+    <footer class="dlg__pie">
+      <button type="button" class="btn" id="dia-restablecer">Restablecer día</button>
+      <button type="button" class="btn" id="dia-registrar">Registrar horas</button>
+      <button type="button" class="btn btn--primario" data-cerrar>Hecho</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- Diálogo de periodo -->
+<dialog id="dlg-rango" class="dlg" aria-labelledby="rango-titulo">
+  <form class="dlg__marco" id="form-rango" novalidate>
+    <header class="dlg__cab">
+      <h2 id="rango-titulo">Marcar un periodo</h2>
+      <button type="button" class="btn-icono" data-cerrar aria-label="Cerrar">×</button>
+    </header>
+    <div class="dlg__cuerpo">
+      <div class="rejilla-campos">
+        <label class="campo">Desde<input type="date" id="rango-desde" required></label>
+        <label class="campo">Hasta<input type="date" id="rango-hasta" required></label>
+      </div>
+      <label class="campo">Marcar como<select id="rango-cat"></select></label>
+      <label class="check"><input type="checkbox" id="rango-festivos"> No cambiar los festivos del periodo</label>
+      <label class="check"><input type="checkbox" id="rango-jornada"> Solo días de mi jornada (omite sábados, domingos y días de descanso)</label>
+      <p class="vista-previa" id="rango-vista" aria-live="polite"></p>
+    </div>
+    <footer class="dlg__pie">
+      <button type="button" class="btn" data-cerrar>Cancelar</button>
+      <button type="submit" class="btn btn--primario" id="rango-aplicar">Aplicar</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- Confirmación -->
+<dialog id="dlg-confirmar" class="dlg dlg--estrecho" aria-labelledby="conf-titulo">
+  <div class="dlg__marco">
+    <header class="dlg__cab"><h2 id="conf-titulo">¿Seguro?</h2></header>
+    <div class="dlg__cuerpo"><p id="conf-texto"></p></div>
+    <footer class="dlg__pie">
+      <button type="button" class="btn" id="conf-cancelar">Cancelar</button>
+      <button type="button" class="btn btn--peligro" id="conf-aceptar">Confirmar</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- Texto exportado -->
+<dialog id="dlg-texto" class="dlg" aria-labelledby="texto-titulo">
+  <div class="dlg__marco">
+    <header class="dlg__cab">
+      <h2 id="texto-titulo">Exportar</h2>
+      <button type="button" class="btn-icono" data-cerrar aria-label="Cerrar">×</button>
+    </header>
+    <div class="dlg__cuerpo">
+      <p class="nota" id="texto-nota"></p>
+      <textarea id="texto-contenido" rows="12" readonly spellcheck="false"></textarea>
+    </div>
+    <footer class="dlg__pie">
+      <button type="button" class="btn" id="texto-descargar">Descargar archivo</button>
+      <button type="button" class="btn btn--primario" id="texto-copiar">Copiar</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- Informe imprimible -->
+<div id="informe" class="informe" hidden>
+  <div class="informe__barra no-imprimir">
+    <button type="button" class="btn" id="inf-cerrar">Cerrar informe</button>
+    <button type="button" class="btn btn--primario" id="inf-imprimir">Imprimir</button>
+    <span class="nota" id="inf-nota"></span>
+  </div>
+  <article id="inf-contenido" class="informe__hoja"></article>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <span id="toast-texto"></span>
+  <button type="button" class="btn btn--enlace" id="toast-accion" hidden>Deshacer</button>
+</div>
+
+<script src="js/festivos-datos.js"></script>
+<script src="js/regiones.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/equipo.js"></script>
+<script src="js/app.js"></script>
+<script src="js/equipo-ui.js"></script>
+</body>
+</html>
